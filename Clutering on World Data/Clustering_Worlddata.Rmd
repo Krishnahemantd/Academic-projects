@@ -1,0 +1,704 @@
+---
+title: "Project1_task_1 Group_8"
+author: "Krishna Hemant and Divyangana Pandey"
+date: "24/11/2021"
+---
+
+```{r}
+#We have used Average-Linkage as the method for clustering after looking at other methods like single-linkage and complete-linkage. 
+#On a general trend, it was observed that hierarchical clustering works better as the cluster gets complex and more data is added to the dataframe
+
+```
+
+````{r}
+library(NbClust)
+library(factoextra)
+library(ggplot2)
+library(dplyr)
+library(scatterplot3d)
+library(philentropy)
+library(ClusterR)
+library(plotly)
+library(dplyr)
+library(tidyr)
+library(ggpubr)
+library(clValid)
+library(knitr)
+````
+
+````{r}
+#DATA SET 1
+
+#Calculate how many clusters we need
+fviz_nbclust(Data1[,2:4], kmeans, method ="wss") + labs(subtitle = "Elbow Method") 
+fviz_nbclust(Data1[,2:4], kmeans, method ="silhouette") + labs(subtitle = "Silhouette Method")
+#The preferred method to determine no of clusters for Data1 is 
+#silhouette coefficient as it gives a closer approximation of k
+
+#Kmeans
+km <- eclust(Data1[,2:4], "kmeans", k = 6, hc_metric = "euclidean",nstart = 25, graph = FALSE)
+Data1$kClass <- km$cluster
+fviz_cluster(km,Data1[,2:4], geom = "point", ellipse.type = "norm",palette = "jco", ggtheme = theme_minimal())
+
+# Hierarchical clustering
+# Use hcut() which compute hclust and cut the tree
+hc <- hcut(Data1[,2:4], k = 6, hc_method = "average")
+Data1$hClass <- hc$cluster
+# Visualize dendrogram
+fviz_dend(hc, show_labels = TRUE, rect = TRUE)
+# Visualize cluster
+fviz_cluster(hc,geom = "point", ellipse.type = "norm",palette = "jco", ggtheme = theme_minimal())
+
+#Plotting with original class
+colors <- c('cyan2', 'blue', 'oldlace', 'red', 'yellow', 'grey')
+colors <- as.numeric(Data1$Class)
+#Visualize the clustering algorithm
+scatterplot3d(Data1[,2:4],pch = 18, type="h", 
+              xlab= "X1", ylab ="X2",zlab = "X3", angle = 60, col.axis="blue",
+              col.grid="lightblue", main="Scatterplot3d - Data1",
+              grid = TRUE, box = TRUE,highlight.3d = FALSE,
+              color = colors)
+
+#Plotting data and comparing with kmeans clustering result via external validation
+colors <- c('cyan2', 'blue', 'oldlace', 'red', 'yellow', 'grey')
+colors <- as.numeric(Data1$kClass)
+#Visualize the clustering algorithm
+scatterplot3d(Data1[,2:4],pch = 18, type="h", 
+              xlab= "X1", ylab ="X2",zlab = "X3", angle = 60, col.axis="blue",
+              col.grid="lightblue", main="Scatterplot3d - Data1-kmeans",
+              grid = TRUE, box = TRUE,highlight.3d = FALSE,
+              color = colors)
+                      
+external_validation(Data1$Class,Data1$kClass,method = "jaccard_index")
+external_validation(Data1$Class,Data1$kClass,method = "adjusted_rand_index")
+external_validation(Data1$Class,Data1$kClass,method = "purity")
+
+#Plotting data and comparing with hierarchical clustering result via external validation
+
+colors <- c('cyan2', 'blue', 'oldlace', 'red', 'yellow', 'grey')
+colors <- as.numeric(Data1$hClass)
+#Visualize the clustering algorithm
+scatterplot3d(Data1[,2:4],pch = 18, type="h", 
+              xlab= "X1", ylab ="X2",zlab = "X3", angle = 60, col.axis="blue",
+              col.grid="lightblue", main="Scatterplot3d - Data1-hclust",
+              grid = TRUE, box = TRUE,highlight.3d = FALSE,
+              color = colors)
+
+external_validation(Data1$Class,Data1$hClass,method = "jaccard_index")
+external_validation(Data1$Class,Data1$hClass,method = "adjusted_rand_index")
+external_validation(Data1$Class,Data1$hClass,method = "purity")
+````
+
+
+#DATA SET 2
+````{r}
+#Calculate how many clusters we need
+fviz_nbclust(Data2[,2:4], kmeans, method ="wss") + labs(subtitle = "Elbow Method") 
+fviz_nbclust(Data2[,2:4], kmeans, method ="silhouette") + labs(subtitle = "Silhouette Method")
+#The preferred method to determine no of clusters for Data1 is 
+#silhouette coefficient as it gives a closer approximation of k
+
+#Kmeans
+km <- eclust(Data2[,2:4], "kmeans", k = 4, hc_metric = "euclidean",nstart = 25, graph = FALSE)
+Data2$kClass <- km$cluster
+fviz_cluster(km,Data2[,2:4], geom = "point", ellipse.type = "norm",palette = "jco", ggtheme = theme_minimal())
+
+# Hierarchical clustering
+# Use hcut() which compute hclust and cut the tree
+hc <- hcut(Data2[,2:4], k = 4, hc_method = "average")
+Data2$hClass <- hc$cluster
+# Visualize dendrogram
+fviz_dend(hc, show_labels = TRUE, rect = TRUE)
+# Visualize cluster
+fviz_cluster(hc,geom = "point", ellipse.type = "norm",palette = "jco", ggtheme = theme_minimal())
+
+#Plotting data with original cluster 
+colors <- c('cyan2', 'blue', 'oldlace', 'red')
+colors <- as.numeric(Data2$Class)
+#Visualize the clustering algorithm
+scatterplot3d(Data2[,2:4],pch = 18, type="h", 
+              xlab= "X1", ylab ="X2",zlab = "X3", angle = 60, col.axis="blue",
+              col.grid="lightblue", main="Scatterplot3d - Data2",
+              grid = TRUE, box = TRUE,highlight.3d = FALSE,
+              color = colors)
+
+#Plotting data and comparing with kmeans clustering result via external validation
+colors <- c('cyan2', 'blue', 'oldlace', 'red')
+colors <- as.numeric(Data2$kClass)
+#Visualize the clustering algorithm
+scatterplot3d(Data2[,2:4],pch = 18, type="h", 
+              xlab= "X1", ylab ="X2",zlab = "X3", angle = 60, col.axis="blue",
+              col.grid="lightblue", main="Scatterplot3d - Data2-kmeans",
+              grid = TRUE, box = TRUE,highlight.3d = FALSE,
+              color = colors)
+
+external_validation(Data2$Class,Data2$kClass,method = "jaccard_index")
+external_validation(Data2$Class,Data2$kClass,method = "adjusted_rand_index")
+external_validation(Data2$Class,Data2$kClass,method = "purity")
+
+#Plotting data and comparing with hierarchical clustering result via external validation
+colors <- c('cyan2', 'blue', 'oldlace', 'red')
+colors <- as.numeric(Data2$hClass)
+#Visualize the clustering algorithm
+scatterplot3d(Data2[,2:4],pch = 18, type="h", 
+              xlab= "X1", ylab ="X2",zlab = "X3", angle = 60, col.axis="blue",
+              col.grid="lightblue", main="Scatterplot3d - Data2-hclust",
+              grid = TRUE, box = TRUE,highlight.3d = FALSE,
+              color = colors)
+
+external_validation(Data2$Class,Data2$hClass,method = "jaccard_index")
+external_validation(Data2$Class,Data2$hClass,method = "adjusted_rand_index")
+external_validation(Data2$Class,Data2$hClass,method = "purity")
+
+#heirarchichal clustering gives more accuracy for data set 2
+````
+
+#DATA SET 3
+````{r}
+#Calculate how many clusters we need
+fviz_nbclust(Data3[,2:4], kmeans, method ="wss") + labs(subtitle = "Elbow Method") 
+fviz_nbclust(Data3[,2:4], kmeans, method ="silhouette") + labs(subtitle = "Silhouette Method")
+#The preferred method to determine no of clusters for Data1 is 
+#silhouette coefficient as it gives a closer approximation of k
+
+#Kmeans
+km <- eclust(Data3[,2:4], "kmeans", k = 4, hc_metric = "euclidean",nstart = 25, graph = FALSE)
+Data3$kClass <- km$cluster
+fviz_cluster(km,Data3[,2:4], geom = "point", ellipse.type = "norm",palette = "jco", ggtheme = theme_minimal())
+#Clusters overlap a lot with kmeans, seems like its harder to cluster with the increase in rows
+
+# Hierarchical clustering
+# Use hcut() which compute hclust and cut the tree
+hc <- hcut(Data3[,2:4], k = 4, hc_method = "average")
+Data3$hClass <- hc$cluster
+# Visualize dendrogram
+fviz_dend(hc, show_labels = TRUE, rect = TRUE)
+# Visualize cluster
+fviz_cluster(hc,geom = "point", ellipse.type = "norm",palette = "jco", ggtheme = theme_minimal())
+#a lot of overlap with heirarchical clustering
+
+#plotting data with original class
+colors <- c('cyan2', 'blue', 'oldlace', 'red')
+colors <- as.numeric(Data3$Class)
+#Visualize the clustering algorithm
+scatterplot3d(Data3[,2:4],pch = 18, type="h", 
+              xlab= "X1", ylab ="X2",zlab = "X3", angle = 60, col.axis="blue",
+              col.grid="lightblue", main="Scatterplot3d - Data3-kmeans",
+              grid = TRUE, box = TRUE,highlight.3d = FALSE,
+              color = colors)
+
+
+#Plotting data and comparing with kmeans clustering result via external validation
+colors <- c('cyan2', 'blue', 'oldlace', 'red')
+colors <- as.numeric(Data3$kClass)
+#Visualize the clustering algorithm
+scatterplot3d(Data3[,2:4],pch = 18, type="h", 
+              xlab= "X1", ylab ="X2",zlab = "X3", angle = 60, col.axis="blue",
+              col.grid="lightblue", main="Scatterplot3d - Data3-kmeans",
+              grid = TRUE, box = TRUE,highlight.3d = FALSE,
+              color = colors)
+
+external_validation(Data3$Class,Data3$kClass,method = "jaccard_index")
+external_validation(Data3$Class,Data3$kClass,method = "adjusted_rand_index")
+external_validation(Data3$Class,Data3$kClass,method = "purity")
+
+#Plotting data and comparing with hierarchical clustering result via external validation
+colors <- c('cyan2', 'blue', 'oldlace', 'red')
+colors <- as.numeric(Data3$hClass)
+#Visualize the clustering algorithm
+scatterplot3d(Data3[,2:4],pch = 18, type="h", 
+              xlab= "X1", ylab ="X2",zlab = "X3", angle = 60, col.axis="blue",
+              col.grid="lightblue", main="Scatterplot3d - Data3-heirarchical",
+              grid = TRUE, box = TRUE,highlight.3d = FALSE,
+              color = colors)
+
+external_validation(Data3$Class,Data3$hClass,method = "jaccard_index")
+external_validation(Data3$Class,Data3$hClass,method = "adjusted_rand_index")
+external_validation(Data3$Class,Data3$hClass,method = "purity")
+
+#kmeans yeilds better accuracy than heirarchical clustering for this data set.
+````
+
+#DATA SET 4
+````{r}
+#Calculate how many clusters we need
+fviz_nbclust(Data4[,2:4], kmeans, method ="wss") + labs(subtitle = "Elbow Method") 
+fviz_nbclust(Data4[,2:4], kmeans, method ="silhouette") + labs(subtitle = "Silhouette Method")
+#The preferred method to determine no of clusters for Data4 is WSS coefficient as it gives a closer approximation of k
+
+#Kmeans
+km <- eclust(Data4[,2:4], "kmeans", k = 2, hc_metric = "euclidean",nstart = 25, graph = FALSE)
+Data4$kClass <- km$cluster
+fviz_cluster(km,Data4[,2:4], geom = "point", ellipse.type = "norm",palette = "jco", ggtheme = theme_minimal())
+#Clusters overlap a lot with kmeans, seems like its harder to cluster with the increase in rows
+
+# Hierarchical clustering
+# Use hcut() which compute hclust and cut the tree
+hc <- hcut(Data4[,2:4], k = 2, hc_method = "average")
+Data4$hClass <- hc$cluster
+# Visualize dendrogram
+fviz_dend(hc, show_labels = TRUE, rect = TRUE)
+# Visualize cluster
+fviz_cluster(hc,geom = "point", ellipse.type = "norm",palette = "jco", ggtheme = theme_minimal())
+#a lot of overlap with heirarchical clustering
+
+#plotting data with original class
+colors <- c('cyan2', 'blue')
+colors <- as.numeric(Data4$Class)
+#Visualize the clustering algorithm
+scatterplot3d(Data4[,2:4],pch = 18, type="h", 
+              xlab= "X1", ylab ="X2",zlab = "X3", angle = 60, col.axis="blue",
+              grid = TRUE, box = TRUE,highlight.3d = FALSE,
+              color = colors)
+
+
+#Plotting data and comparing with kmeans clustering result via external validation
+colors <- c('cyan2', 'blue')
+colors <- as.numeric(Data4$kClass)
+#Visualize the clustering algorithm
+scatterplot3d(Data4[,2:4],pch = 18, type="h", 
+              xlab= "X1", ylab ="X2",zlab = "X3", angle = 60, col.axis="blue",
+              col.grid="lightblue", main="Scatterplot3d - Data4-kmeans",
+              grid = TRUE, box = TRUE,highlight.3d = FALSE,
+              color = colors)
+
+external_validation(Data4$Class,Data4$kClass,method = "jaccard_index")
+external_validation(Data4$Class,Data4$kClass,method = "adjusted_rand_index")
+external_validation(Data4$Class,Data4$kClass,method = "purity")
+#rand index show's low values as purity method seems to give high accuracy for kmeans
+
+#Plotting data and comparing with hierarchical clustering result via external validation
+colors <- c('cyan2', 'blue')
+colors <- as.numeric(Data4$hClass)
+#Visualize the clustering algorithm
+scatterplot3d(Data4[,2:4],pch = 18, type="h", 
+              xlab= "X1", ylab ="X2",zlab = "X3", angle = 60, col.axis="blue",
+              col.grid="lightblue", main="Scatterplot3d - Data4-heirarchical",
+              grid = TRUE, box = TRUE,highlight.3d = FALSE,
+              color = colors)
+
+external_validation(Data4$Class,Data4$hClass,method = "jaccard_index")
+external_validation(Data4$Class,Data4$hClass,method = "adjusted_rand_index")
+external_validation(Data4$Class,Data4$hClass,method = "purity")
+# again, we notice that hierarchical clustering gives more accuracy with the increase in data 
+````
+
+#DATA SET 5
+````{r}
+#Calculate how many clusters we need
+fviz_nbclust(Data5[,2:4], kmeans, method ="wss") + labs(subtitle = "Elbow Method") 
+fviz_nbclust(Data5[,2:4], kmeans, method ="silhouette") + labs(subtitle = "Silhouette Method")
+# silhoutte value 2 has been preferred 
+
+#Kmeans
+km <- eclust(Data5[,2:4], "kmeans", k = 2, hc_metric = "euclidean",nstart = 25, graph = FALSE)
+Data5$kClass <- km$cluster
+fviz_cluster(km,Data5[,2:4], geom = "point", ellipse.type = "norm",palette = "jco", ggtheme = theme_minimal())
+#Clusters overlap a lot with kmeans, seems like its harder to cluster with the increase in rows
+
+# Hierarchical clustering
+# Use hcut() which compute hclust and cut the tree
+hc <- hcut(Data5[,2:4], k = 2, hc_method = "average")
+Data5$hClass <- hc$cluster
+# Visualize dendrogram
+fviz_dend(hc, show_labels = TRUE, rect = TRUE)
+# Visualize cluster
+fviz_cluster(hc,geom = "point", ellipse.type = "norm",palette = "jco", ggtheme = theme_minimal())
+# heirarchical clustering seems to work better on data set5 
+
+#plotting data with original class
+colors <- c('cyan2', 'blue')
+colors <- as.numeric(Data5$Class)
+#Visualize the clustering algorithm
+scatterplot3d(Data5[,2:4],pch = 18, type="h", 
+              xlab= "X1", ylab ="X2",zlab = "X3", angle = 60, col.axis="blue",
+              col.grid="lightblue", main="Scatterplot3d - Data5",
+              grid = TRUE, box = TRUE,highlight.3d = FALSE,
+              color = colors)
+
+
+#Plotting data and comparing with kmeans clustering result via external validation
+colors <- c('cyan2', 'blue')
+colors <- as.numeric(Data5$kClass)
+#Visualize the clustering algorithm
+scatterplot3d(Data5[,2:4],pch = 18, type="h", 
+              xlab= "X1", ylab ="X2",zlab = "X3", angle = 60, col.axis="blue",
+              col.grid="lightblue", main="Scatterplot3d - Data5-kmeans",
+              grid = TRUE, box = TRUE,highlight.3d = FALSE,
+              color = colors)
+
+external_validation(Data5$Class,Data5$kClass,method = "jaccard_index")
+external_validation(Data5$Class,Data5$kClass,method = "adjusted_rand_index")
+external_validation(Data5$Class,Data5$kClass,method = "purity")
+
+#Plotting data and comparing with hierarchical clustering result via external validation
+colors <- c('cyan2', 'blue', 'oldlace', 'red')
+colors <- as.numeric(Data5$hClass)
+#Visualize the clustering algorithm
+scatterplot3d(Data5[,2:4],pch = 18, type="h", 
+              xlab= "X1", ylab ="X2",zlab = "X3", angle = 60, col.axis="blue",
+              col.grid="lightblue", main="Scatterplot3d - Data5-heirarchical",
+              grid = TRUE, box = TRUE,highlight.3d = FALSE,
+              color = colors)
+
+external_validation(Data5$Class,Data5$hClass,method = "jaccard_index")
+external_validation(Data5$Class,Data5$hClass,method = "adjusted_rand_index")
+external_validation(Data5$Class,Data5$hClass,method = "purity")
+
+#Kmeans clustering seems to have higher accuracy for other indexes with a similar jaccard index value to hierarchical clustering 
+````
+#DATA SET 6
+````{r}
+#Calculate how many clusters we need
+fviz_nbclust(Data6[,2:3], kmeans, method ="wss") + labs(subtitle = "Elbow Method") 
+fviz_nbclust(Data6[,2:3], kmeans, method ="silhouette") + labs(subtitle = "Silhouette Method")
+#elbow and silhoutte suggest for 3 clusters while we know that the data set contains 2 clusters
+
+#Kmeans
+km <- eclust(Data6[,2:3], "kmeans", k = 2, hc_metric = "euclidean",nstart = 25, graph = FALSE)
+Data6$kClass <- km$cluster
+fviz_cluster(km,Data6[,2:3], geom = "point", ellipse.type = "norm",palette = "jco", ggtheme = theme_minimal())
+#A little overlap,but it's mostly clustered into 2 clusters with kmeans
+
+# Hierarchical clustering
+# Use hcut() which compute hclust and cut the tree
+hc <- hcut(Data6[,2:3], k = 2, hc_method = "average")
+Data6$hClass <- hc$cluster
+# Visualize dendrogram
+fviz_dend(hc, show_labels = TRUE, rect = TRUE)
+# Visualize cluster
+fviz_cluster(hc,geom = "point", ellipse.type = "norm",palette = "jco", ggtheme = theme_minimal())
+# heirarchical clustering seems to work lesser than kmeans on data set 6
+
+
+#comparingkmeans clustering result via external validation
+
+external_validation(Data6$Class,Data6$kClass,method = "jaccard_index")
+external_validation(Data6$Class,Data6$kClass,method = "adjusted_rand_index")
+external_validation(Data6$Class,Data6$kClass,method = "purity")
+
+# comparing hierarchical clustering result via external validation
+
+external_validation(Data6$Class,Data6$hClass,method = "jaccard_index")
+external_validation(Data6$Class,Data6$hClass,method = "adjusted_rand_index")
+external_validation(Data6$Class,Data6$hClass,method = "purity")
+
+#Overall, Kmeans clustering seems to have higher accuracy for all validation methods than hierarchical clustering 
+````
+
+#DATA SET 7
+````{r}
+#Calculate how many clusters we need
+fviz_nbclust(Data7[,2:3], kmeans, method ="wss") + labs(subtitle = "Elbow Method") 
+fviz_nbclust(Data7[,2:3], kmeans, method ="silhouette") + labs(subtitle = "Silhouette Method")
+#elbow and silhoutte suggest for 5 and 6 clusters while we know that the data set contains 6 clusters, after testing 6 seems to give a good clustering result visually 
+
+#Kmeans
+km <- eclust(Data7[,2:3], "kmeans", k = 6, hc_metric = "euclidean",nstart = 25, graph = FALSE)
+Data7$kClass <- km$cluster
+fviz_cluster(km,Data7[,2:3], geom = "point", ellipse.type = "norm",palette = "jco", ggtheme = theme_minimal())
+#it's mostly clustered into 6 clusters with some overlap by kmeans
+
+# Hierarchical clustering
+# Use hcut() which compute hclust and cut the tree
+hc <- hcut(Data7[,2:3], k = 6, hc_method = "average")
+Data7$hClass <- hc$cluster
+# Visualize dendrogram
+fviz_dend(hc, show_labels = TRUE, rect = TRUE)
+# Visualize cluster
+fviz_cluster(hc,geom = "point", ellipse.type = "norm",palette = "jco", ggtheme = theme_minimal())
+# heirarchical clustering with 'average' method seems to give the closest results to original data
+
+
+
+# comparing kmeans clustering result via external validation
+
+external_validation(Data7$Class,Data7$kClass,method = "jaccard_index")
+external_validation(Data7$Class,Data7$kClass,method = "adjusted_rand_index")
+external_validation(Data7$Class,Data7$kClass,method = "purity")
+
+# comparing hierarchical clustering result via external validation
+
+
+external_validation(Data7$Class,Data7$hClass,method = "jaccard_index")
+external_validation(Data7$Class,Data7$hClass,method = "adjusted_rand_index")
+external_validation(Data7$Class,Data7$hClass,method = "purity")
+
+#Graphically, hierarchical clustering seems to be the closest to original class data but the external validation tools point to kmeans as being more accurate 
+````
+
+#DATA SET 8
+
+````{r}
+#Calculate how many clusters we need
+fviz_nbclust(Data8[,2:4], kmeans, method ="wss") + labs(subtitle = "Elbow Method") 
+fviz_nbclust(Data8[,2:4], kmeans, method ="silhouette") + labs(subtitle = "Silhouette Method")
+#Original data shows 1 cluster while elbow and silhoutte method show 2-3 and 6 k's as optimal.
+
+#Kmeans
+km <- eclust(Data8[,2:4], "kmeans", k = 6, hc_metric = "euclidean",nstart = 100, graph = FALSE)
+Data8$kClass <- km$cluster
+fviz_cluster(km,Data8[,2:4], geom = "point", ellipse.type = "norm",palette = "jco", ggtheme = theme_minimal())
+#k-means throws an error when number of clusters is 1 as it is not clustering, shows results for k>1
+
+# Hierarchical clustering
+# Use hcut() which compute hclust and cut the tree
+hc <- hcut(Data8[,2:4], k = 6, hc_method = "average")
+Data8$hClass <- hc$cluster
+# Visualize dendrogram
+fviz_dend(hc, show_labels = TRUE, rect = TRUE)
+# Visualize cluster
+fviz_cluster(hc,geom = "point", ellipse.type = "norm",palette = "jco", ggtheme = theme_minimal())
+#h-clust throws an error when number of clusters is 1 as it is not clustering, shows results for k>1
+
+#plotting data with original class
+colors <- c('cyan2', 'blue')
+colors <- as.numeric(Data8$Class)
+#Visualize the clustering algorithm
+scatterplot3d(Data8[,2:4],pch = 18, type="h", 
+              xlab= "X1", ylab ="X2",zlab = "X3", angle = 60, col.axis="blue",
+              col.grid="lightblue", main="Scatterplot3d - Data8",
+              grid = TRUE, box = TRUE,highlight.3d = FALSE,
+              color = colors)
+
+
+#Plotting data and comparing with kmeans clustering result via external validation
+colors <- c('cyan2', 'blue')
+colors <- as.numeric(Data8$kClass)
+#Visualize the clustering algorithm
+scatterplot3d(Data8[,2:4],pch = 18, type="h", 
+              xlab= "X1", ylab ="X2",zlab = "X3", angle = 60, col.axis="blue",
+              col.grid="lightblue", main="Scatterplot3d - Data8-kmeans",
+              grid = TRUE, box = TRUE,highlight.3d = FALSE,
+              color = colors)
+
+external_validation(Data8$Class,Data8$kClass,method = "jaccard_index")
+external_validation(Data8$Class,Data8$kClass,method = "adjusted_rand_index")
+external_validation(Data8$Class,Data8$kClass,method = "purity")
+
+#Plotting data and comparing with hierarchical clustering result via external validation
+colors <- c('cyan2', 'blue', 'oldlace', 'red')
+colors <- as.numeric(Data8$hClass)
+#Visualize the clustering algorithm
+scatterplot3d(Data8[,2:4],pch = 18, type="h", 
+              xlab= "X1", ylab ="X2",zlab = "X3", angle = 60, col.axis="blue",
+              col.grid="lightblue", main="Scatterplot3d - Data8-heirarchical",
+              grid = TRUE, box = TRUE,highlight.3d = FALSE,
+              color = colors)
+
+external_validation(Data8$Class,Data8$hClass,method = "jaccard_index")
+external_validation(Data8$Class,Data8$hClass,method = "adjusted_rand_index")
+external_validation(Data8$Class,Data8$hClass,method = "purity")
+
+#The algorithm does not converge after 100 iterations as we cannot find an optimal value of k
+````
+
+
+########################## TASK 2#################################################
+#We have already converted the columns with "$" into numeric using Ms-Excel features. 
+#We will attach the cleaned file in with the assignment.Please use the clean file for assessment
+
+#####Step 1#####
+#Cleaning data to remove columns with missing values or characters from WorldIndicators.csv
+````{r}
+worlddata<- World_Indicators %>% select(-c('Energy Usage','Lending Interest','Region')) 
+worlddata_Omit <- worlddata %>% na.omit()
+ww_scaled <- as.data.frame(scale(worlddata_Omit[1:16])) #Removing char columns with from dataset
+ww_scaled <- cbind(worlddata_Omit[,17],ww_scaled)
+````
+#Plotting histogram to visualize actual data 
+````{r}
+World_Indicators %>% 
+  gather(Attributes, value, 1:18) %>% 
+  ggplot(aes(x=value)) +
+  geom_histogram(fill = "lightblue2", color = "black") + 
+  facet_wrap(~Attributes, scales = "free_x") +
+  labs(x = "Value", y = "Frequency")
+
+
+#Establish relationship between GDP & Birth Rate
+subset1 <- worlddata_Omit %>% select("GDP", "Birth Rate")
+scaled_subset1 <- as.data.frame(scale(subset1))
+row.names(scaled_subset1) <- ww_scaled$Country
+````
+
+````{r}
+#Determine the number of clusters
+fviz_nbclust(scaled_subset1, kmeans, method ="wss") + labs(subtitle = "Elbow Method")
+fviz_nbclust(scaled_subset1, kmeans, method ="silhouette") + labs(subtitle = "Silhouette Method")
+#from the above, we get k=3 as the number of clusters
+
+#comparing kMeans and Hierarchical clustering algo based on 'n' values of clusters 
+comparison_index <- clValid(scaled_subset1, nClust = 2:10, 
+                  clMethods = c("hierarchical","kmeans"), validation = "internal")
+summary(comparison_index)
+````
+
+````{r}
+#kMeans with different k values
+generic_kmeans <- function(df, ...){
+  kmeans(df, scaled = ..., nstart = 30)
+}
+
+km4 <- generic_kmeans(scaled_subset1, 4)
+scaled_subset1$kclusterCol <- km4$cluster
+fviz_cluster(km4, data = scaled_subset1,xlab = "GDP", ylab = "Birth Rate") + theme_minimal() + ggtitle("k = 4")
+# For k=4, gives clusters with minimum intra-cluster distances and maximum inter cluster distances.
+# With k=3, we have one of the cluster has too huge intra cluster distancing in between the countries.Hence k=4 is the optimal
+````
+
+#Hierarchical clustering using ward.D method with k=4
+````{r}
+dist_subset1 <- dist(scaled_subset1,method = "euclidean")
+clusterCountries_s1 = hclust(dist_subset1,method = "ward.D")
+clusters_s1 <- cutree(clusterCountries_s1, k = 4)
+#Plotting Hierarchial graph
+plot(clusterCountries_s1, cex = 0.64)
+rect.hclust(clusterCountries_s1, k = 4, border = 2:10)
+#Adding Hierarchial cluster column to dataset
+scaled_subset1$hClass <- clusters_s1
+````
+
+````{r}
+#Summarizing the results for kmean with k=4 to
+as.data.frame(scaled_subset1) %>% 
+  mutate(Cluster = km4$cluster) %>% group_by(Cluster) %>% summarise_all("mean") %>% kable()
+
+
+#Calculating Dunn Index for different k values
+library(clValid)
+Dunn_k2 <- dunn(clusters = km2$cluster, Data = scaled_subset1)
+Dunn_k3 <- dunn(clusters = km3$cluster, Data = scaled_subset1)
+Dunn_k4 <- dunn(clusters = km4$cluster, Data = scaled_subset1)
+Dunn_k2
+Dunn_k3
+Dunn_k4
+
+# Silhouette Index
+sil_k2<- silhouette(km2$cluster,dist_subset1 )
+sil_k3<- silhouette(km3$cluster,dist_subset1 )
+sil_k4<- silhouette(km3$cluster,dist_subset1 )
+sil_k5<- silhouette(km4$cluster,dist_subset1 )
+
+old.par <- par(mfrow=c(2,2))
+plot(sil_k2, main="Silhouette Method - Kmeans & k=2")
+plot(sil_k3, main="Silhouette Method - Kmeans & k=3")
+plot(sil_k4, main="Silhouette Method - Kmeans & k=4")
+plot(sil_k5, main="Silhouette Method - Kmeans & k=5")
+par(old.par)
+
+as.data.frame(scaled_subset1)
+print("Printing the final table in descending order of GDP")
+print(scaled_subset1[order(-scaled_subset1$GDP),])
+````
+######### FINAL OBSERVATION 1 (GDP AND Birth Rate) ###########
+# Our calculations show that with k=4, we get the maximum value for Dunn Index and Silhouette width from the graphs.
+# Hence, from the graph we can concur that superpowers like USA, China and Japan have high GDP values with low birthrates
+# Countries like Spain, Russia, Canada, Italy have moderate GDP with moderate birth rates when compared with poor nations like 
+# Niger, Mali ,Chad, Tajakistan etc.We are encountering cache issues while trying to run the graphs. 
+# Please run the graphs once to get the actual results.
+# Re-Running the same graph changes the clustering
+########### END OF OBSERVATION 1 RESULTS ################
+
+
+###########OBSERVATION 2 Between Internet Usage & GDP ##############
+````{r}
+#Establish relationship between Internet Usage & GDP
+subset2 <- worlddata_Omit %>% select("GDP", "Internet Usage")
+scaled_subset2 <- as.data.frame(scale(subset2))
+row.names(scaled_subset2) <- ww_scaled$Country
+
+#Determine the number of clusters
+fviz_nbclust(scaled_subset2, kmeans, method ="wss") + labs(subtitle = "Elbow Method")
+fviz_nbclust(scaled_subset2, kmeans, method ="silhouette") + labs(subtitle = "Silhouette Method")
+#from the above, we get k=3 as the number of clusters as Elbow whereas Silhouette method suggests k = 10
+````
+
+````{r}
+
+sub2_km3 <- kmeans(scaled_subset2, 3)
+sub2_km10 <- kmeans(scaled_subset2, 10)
+scaled_subset2$kclusterCol <- sub2_km3$cluster
+fviz_cluster(sub2_km3, data = scaled_subset2,xlab = "GDP", ylab = "Internet Usage") + theme_minimal() + ggtitle("k = 3")
+# For k=3, gives clusters with minimum intra-cluster distances and maximum inter cluster distances.
+# With k=10, we have overlapping clusters which violates the clustering logic.Hence k=3 is the optimal
+````
+````{r}
+#Hierarchical clustering using ward.D method with k=10
+dist_subset2 <- dist(scaled_subset2,method = "euclidean")
+clusterCountries_s2 = hclust(dist_subset2,method = "ward.D")
+clusters_s2 <- cutree(clusterCountries_s2, k = 10)
+#Plotting Hierarchial graph
+plot(clusterCountries_s2, cex = 0.64)
+rect.hclust(clusterCountries_s2, k = 10, border = 2:10)
+#Adding Hierarchial cluster column to dataset
+scaled_subset2$hClass_k10 <- clusters_s2
+````
+````{r}
+#Calculating Dunn Index for different k values
+library(clValid)
+Sub2_Dunn_k3 <- dunn(clusters = sub2_km3$cluster, Data = scaled_subset2)
+Sub2_Dunn_k10 <- dunn(clusters = sub2_km10$cluster, Data = scaled_subset2)
+
+Sub2_Dunn_k3 #Gives0.22 
+Sub2_Dunn_k10 #Gives 0.155
+#Hence k = 3 is optimal
+
+# Silhouette Index
+sub2_sil_k3<- silhouette(sub2_km3$cluster,dist_subset2 )
+sub2_sil_k10<- silhouette(sub2_km10$cluster,dist_subset2 )
+
+old.par <- par(mfrow=c(1,2))
+plot(sub2_sil_k3, main="Silhouette Method - Kmeans & k=3")
+plot(sub2_sil_k10, main="Silhouette Method - Kmeans & k=10")
+par(old.par)
+# There is hardly any change in the values of silhouette coefficient if we change k from 3 to 10. 
+
+as.data.frame(scaled_subset2)
+print("Printing the final table in descending order of GDP")
+print(scaled_subset2[order(-scaled_subset2$GDP),])
+````
+
+# ######## FINAL OBSERVATION 2 FOR RELATIONSHIP BETWEEN Internet Usage & GDP ###########
+# As per the data given in csv file, the countries like United States, China, Japan 
+# are clubbed under one cluster with high Internet using countries and high GDP. 
+# Countries like Botswana,Burkina Faso,Burundi,Cameroon,Central African Republic,Chad,Comoros,Congo etc 
+# are clubbed under moderate GDP with low to moderate Internet Usage.There are discrepancies in clustering 
+# as the data is incorrect because India (a developed nation is clubbed with countries with poor GDP)
+#####################    END OF OBSERVATION 2 RESULTS ########################################
+
+################## Observation 3 Population 65+ & Population Urban ############################
+
+
+#Establish relationship between Population 65+ & Population Urban
+
+````{r}
+subset3 <- worlddata_Omit %>% select("Population 65+", "Population Urban")
+scaled_subset3 <- as.data.frame(scale(subset3))
+row.names(scaled_subset3) <- ww_scaled$Country
+
+#Determine the number of clusters
+fviz_nbclust(scaled_subset3, kmeans, method ="wss") + labs(subtitle = "Elbow Method")
+fviz_nbclust(scaled_subset3, kmeans, method ="silhouette") + labs(subtitle = "Silhouette Method")
+#from the above, we get k=3 as the number of clusters from both Elbow whereas Silhouette method
+````
+````{r}
+#Hierarchical clustering using ward.D method with k=3
+res.hc <- eclust(scaled_subset3, "hclust", k = 3,method = "ward.D", graph = FALSE) 
+fviz_dend(res.hc, rect = TRUE, show_labels = TRUE,cex = 0.5) 
+#Plotting Hierarchical graph
+fviz_silhouette(res.hc) #Avg silhouette width with k=3 is 0.59
+#Adding Hierarchical cluster column to dataset
+scaled_subset3$hClass_k3 <- res.hc$cluster
+
+fviz_cluster(res.hc,geom = "text", ellipse.type = "norm",palette = "jco", ggtheme = theme_minimal())
+````
+#Calculating Dunn Index for different k values
+````{r}
+Sub3_Dunn_k3 <- dunn(clusters = res.hc$cluster, Data = scaled_subset3)
+
+Sub3_Dunn_k3 #Gives 0.3337768
+
+````
+# ######## FINAL OBSERVATION 3 ###########
+# We can generalize, after hierarchical clustering with k=3 that most people in European countries with age =65+ of age still choose to reside in the urban areas, whereas old people from South Asia and Africa prefer to live in countryside

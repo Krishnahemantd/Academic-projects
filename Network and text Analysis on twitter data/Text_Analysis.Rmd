@@ -1,0 +1,427 @@
+---
+title: "Project 2"
+Team Members: "Krishna Hemant & Divyangana Pandey"
+---
+````{r}
+library(ggplot2)
+library(igraph)
+library(dplyr)
+library(tidyr)
+````
+
+````{r}
+#Part 1 - Converting keyword_Data into a proper matrix
+row.names(Keyword_dataa)<- Keyword_dataa$X1
+Keyword_dataa<- as.data.frame(Keyword_dataa)
+Keyword_dataa<- Keyword_dataa[,-1]
+Keyword_dataa<- as.matrix(Keyword_dataa)
+a<- sum(Keyword_dataa)
+
+#Part 2 # Converting the above matrix to a network
+net<-graph_from_adjacency_matrix(Keyword_dataa,mode="undirected",weighted = TRUE)
+````
+
+````{r}
+#Part 3 #Computing degree and strength for the network
+deg <- degree(net, mode="all")
+strength <- strength(net, mode="all")
+strength
+````
+
+````{r}
+#Part 4 # Displaying top 10 nodes by Degree and Strength
+deg<- data.frame(deg)
+deg<- deg %>% arrange(-deg)
+head(deg,10)
+strength<- data.frame(strength)
+strength<- strength %>% arrange(-strength)
+head(strength,10)
+````
+
+````{r}
+#Part 5 # Computing and Storing top 10 node pairs by weight in a data frame- Weighted_list
+
+z<- get.data.frame(net)
+weighted_list <- z %>% arrange(desc(z$weight)) %>% slice(1:10)
+weighted_list
+````
+
+````{r}
+#Part 6 - Plotting average Strength vs degree
+
+deg_avgstrength <- cbind(deg,strength)
+z<- aggregate( strength ~ deg , deg_avgstrength, mean )
+
+plot(z$deg,z$strength)
+````
+
+############################TASK 2#########################################
+
+```{r}
+library(dplyr)
+library(stringr)
+library(tidytext)
+library(janeaustenr)
+library(ggplot2)
+library(tidyr)
+library(igraph)
+library(ggraph)
+library(plyr)
+library(utils)
+library(readr)
+library(stringr)
+library(utilities)
+library(stopwords)
+library(igraph)
+```
+
+
+```{r}
+# Combine all files and read them. Please replace the path = in the below with the local path to the folder containing all files from 2017 until 2021 . This function combines all the files into one.
+files <- list.files(path = "~/Downloads/archive", pattern = "*.csv", full.names = T)
+tbl <- sapply(files, read_csv, simplify=FALSE) %>% bind_rows(.id = "id") %>% filter()
+```
+
+
+````{r}
+#Data cleaning for tweet column
+clean_data <- function(df) {
+  df$tweet = tolower(df$tweet)
+  df$tweet = gsub("[[:punct:]]", "", df$tweet) #remove all punctuation marks
+  df$tweet = gsub("[1,2,4,5,6,7,8,9,0]", "", df$tweet) #remove all words except 3
+  df$tweet = gsub("&amp;","",df$tweet) #remove all ampersand signs
+  #df$tweet = gsub("(tesla|Tesla|spacex|3|SpaceX)((?:\\b\\W*@\\w+)+)", "", df$tweet)
+  df$tweet = gsub("amp","",df$tweet)
+  df$tweet = gsub("@\\w+", "", df$tweet) #remove @ from words
+  df$tweet = gsub("http\\w+", "", df$tweet) #remove Urls
+  df$tweet = gsub("https\\w+", "", df$tweet) #remove Urls
+  df$tweet = gsub("[ \t]{2,}", "", df$tweet) #remove more than 2 spaces between words
+  df$tweet = gsub("^\\s+|\\s+$", "", df$tweet)
+  df$tweet = gsub("[\U4E00-\U9FFF\U3000-\U303F]", "", df$tweet) #remove Chinese characters
+  df$year <- format(df$date, format = "%Y") #extract year from dates
+  return (df)
+}
+````
+
+```{r}
+#Creating year wise dataframes
+clean_X2017 <- clean_data(X2017) %>% filter(year=="2017") %>% drop_na(date,year,tweet)
+clean_X2018 <- clean_data(X2018) %>% filter(year=="2018") %>% drop_na(date,year,tweet)
+clean_X2019 <- clean_data(X2019) %>% filter(year=="2019") %>% drop_na(date,year,tweet)
+clean_X2020 <- clean_data(X2020) %>% filter(year=="2020") %>% drop_na(date,year,tweet)
+clean_X2021 <- clean_data(X2021) %>% filter(year=="2021") %>% drop_na(date,year,tweet)
+clean_tbl <- clean_data(tbl)
+```
+
+
+```{r}
+#Compute word frequencies for each year. Exclude the stop words
+word_freq_yearwise <- function(df) {
+  words_tweet <- df %>%
+    unnest_tokens(word, tweet) %>% dplyr::count(year, word, sort = TRUE) %>%
+    filter(!(word %in% stopwords(source = "snowball")))
+  
+  total_words <- words_tweet %>%
+    group_by(year) %>% dplyr::summarize(total = sum(n))
+  
+  words_tweet <- left_join(words_tweet, total_words)
+  return(words_tweet)
+}
+```
+
+
+```{r}
+#Show top 10 words (for each year) by the highest value of word frequency
+word_frequency_2017 <- word_freq_yearwise(clean_X2017)
+top_10_words_2017 <- head(word_frequency_2017, 10)
+print(top_10_words_2017)
+
+word_frequency_2018 <- word_freq_yearwise(clean_X2018)
+top_10_words_2018 <- head(word_frequency_2018, 10)
+print(top_10_words_2018)
+
+word_frequency_2019 <- word_freq_yearwise(clean_X2019)
+top_10_words_2019 <- head(word_frequency_2019, 10)
+print(top_10_words_2019)
+
+word_frequency_2020 <- word_freq_yearwise(clean_X2020)
+top_10_words_2020 <- head(word_frequency_2020, 10)
+print(top_10_words_2020)
+
+word_frequency_2021 <- word_freq_yearwise(clean_X2021)
+top_10_words_2021 <- head(word_frequency_2021, 10)
+print(top_10_words_2021)
+
+full_tbl_with_n <- word_freq_yearwise(clean_tbl)
+```
+
+```{r}
+#Plot histogram of word frequencies for each year
+generate_histogram <- function(df) {
+  ggplot(df, aes(n / total, fill = year, color = count)) +
+    geom_histogram(show.legend = TRUE,
+                   color = "darkblue",
+                   fill = "lightblue",) +
+    facet_wrap(~ year, ncol = 2, scales = "free_y")
+}
+
+
+generate_histogram(word_frequency_2017)
+generate_histogram(word_frequency_2018)
+generate_histogram(word_frequency_2019)
+generate_histogram(word_frequency_2020)
+generate_histogram(word_frequency_2021)
+```
+
+````{r}
+# Zipf's law
+calculate_termFrequency <- function(df) {
+  freq_by_rank <- df %>%
+    group_by(year) %>%
+    dplyr::mutate(rank = row_number(),
+                  `term_frequency` = n / total) %>%
+    ungroup()
+  return(freq_by_rank)
+}
+
+plot_termFrequency <- function(df) {
+  df %>%
+    ggplot(aes(rank, term_frequency, color = year)) +
+    geom_line(size = .5,
+              alpha = 0.8,
+              show.legend = TRUE) +
+    scale_x_log10() +
+    scale_y_log10()
+}
+
+```
+
+
+````{r} 
+termFrequency_2017 <- calculate_termFrequency(word_frequency_2017)
+termFrequency_2018 <- calculate_termFrequency(word_frequency_2018)
+termFrequency_2019 <- calculate_termFrequency(word_frequency_2019)
+termFrequency_2020 <- calculate_termFrequency(word_frequency_2020)
+termFrequency_2021 <- calculate_termFrequency(word_frequency_2021)
+#Plot term frequency yearly
+plot_termFrequency(termFrequency_2017)
+plot_termFrequency(termFrequency_2018)
+plot_termFrequency(termFrequency_2019)
+plot_termFrequency(termFrequency_2020)
+plot_termFrequency(termFrequency_2021)
+```
+
+```{r}
+#Plot log-log plots of word frequencies and rank for each year
+#For year 2017
+rank_subset_2017 <- termFrequency_2017 %>%
+  filter(rank < 800,
+         rank > 10)
+
+lm(as.double(log10(term_frequency)) ~ as.double(log10(rank)), data = rank_subset_2017)
+
+
+rank_subset_2017 %>%
+  ggplot(aes(rank, `term_frequency`, color = year)) +
+  geom_abline(
+    intercept = -1.7595,
+    slope = -0.5624,
+    color = "gray50",
+    linetype = 2
+  ) +
+  geom_line(size = 1.1,
+            alpha = 0.8,
+            show.legend = FALSE) +
+  scale_x_log10() +
+  scale_y_log10()
+
+````
+
+````{r}
+#For year 2018
+rank_subset_2018 <- termFrequency_2018 %>%
+  filter(rank < 1000,
+         rank > 10)
+
+lm(as.double(log10(term_frequency)) ~ as.double(log10(rank)), data = rank_subset_2018)
+
+
+rank_subset_2018 %>%
+  ggplot(aes(rank, `term_frequency`, color = year)) +
+  geom_abline(
+    intercept = -1.5497,
+    slope = -0.7071,
+    color = "gray50",
+    linetype = 2
+  ) +
+  geom_line(size = 1.1,
+            alpha = 0.8,
+            show.legend = FALSE) +
+  scale_x_log10() +
+  scale_y_log10()
+````
+
+````{r}
+#For year 2019
+rank_subset_2019 <- termFrequency_2019 %>%
+  filter(rank < 300,
+         rank > 10)
+
+lm(as.double(log10(term_frequency)) ~ as.double(log10(rank)), data = rank_subset_2019)
+
+
+rank_subset_2018 %>%
+  ggplot(aes(rank, `term_frequency`, color = year)) +
+  geom_abline(
+    intercept = -1.7508,
+    slope = -0.5951 ,
+    color = "gray50",
+    linetype = 2
+  ) +
+  geom_line(size = 1.1,
+            alpha = 0.8,
+            show.legend = FALSE) +
+  scale_x_log10() +
+  scale_y_log10()
+````
+````{r}
+#For year 2020
+rank_subset_2020 <- termFrequency_2020 %>%
+  filter(rank < 300,
+         rank > 10)
+
+lm(as.double(log10(term_frequency)) ~ as.double(log10(rank)), data = rank_subset_2020)
+
+
+rank_subset_2020 %>%
+  ggplot(aes(rank, `term_frequency`, color = year)) +
+  geom_abline(
+    intercept = -1.6720,
+    slope = -0.6352 ,
+    color = "gray50",
+    linetype = 2
+  ) +
+  geom_line(size = 1.1,
+            alpha = 0.8,
+            show.legend = FALSE) +
+  scale_x_log10() +
+  scale_y_log10()
+````
+
+
+````{r}
+#For year 2021
+rank_subset_2021 <- termFrequency_2021 %>%
+  filter(rank < 500,
+         rank > 5)
+
+lm(as.double(log10(term_frequency)) ~ as.double(log10(rank)), data = rank_subset_2021)
+
+
+rank_subset_2021 %>%
+  ggplot(aes(rank, `term_frequency`, color = year)) +
+  geom_abline(
+    intercept = -1.6358,
+    slope = -0.6195,
+    color = "gray50",
+    linetype = 2
+  ) +
+  geom_line(size = 1.1,
+            alpha = 0.8,
+            show.legend = FALSE) +
+  scale_x_log10() +
+  scale_y_log10()
+````
+
+````{r}
+yearly_tf_idf <- full_tbl_with_n %>% bind_tf_idf(word, year, n) %>% filter(year >= "2017" & year <= "2021")
+
+
+yearly_tf_idf %>%
+  select(-total) %>%
+  arrange(desc(tf_idf))
+
+library(forcats)
+
+yearly_tf_idf %>%
+  group_by(year) %>%
+  slice_max(tf_idf, n = 10) %>%
+  ungroup() %>%
+  ggplot(aes(tf_idf, fct_reorder(word, tf_idf), fill = year)) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~year, ncol = 2, scales = "free") +
+  labs(x = "tf-idf", y = NULL)
+#save(freq_by_rank, file = "word_frequency_2017tf_idf.Rdata")
+
+````
+
+
+
+
+````{r}
+#Create bigram network graphs for each year
+
+plot_bigram <- function(year){
+ year_bigrams <- clean_tbl %>%
+  unnest_tokens(bigram, tweet, token = "ngrams", n = 2)
+
+year_bigrams
+
+# Counting bigrams
+year_bigrams %>%
+  dplyr::count(bigram, sort = TRUE)
+
+# bigrams with stop words
+bigrams_separated <- year_bigrams %>%
+  separate(bigram, c("word1", "word2"), sep = " ")
+
+bigrams_filtered <- bigrams_separated %>%
+  filter(!word1 %in% stop_words$word) %>%
+  filter(!word2 %in% stop_words$word) 
+
+bigrams_filtered <- bigrams_filtered %>% filter(year==year)
+# new bigram counts:
+bigram_counts <- bigrams_filtered %>% 
+  dplyr::count(word1, word2, sort = TRUE)
+
+# bigram as tf-idf
+bigrams_united <- bigrams_filtered %>%
+  unite(bigram, word1, word2, sep = " ")
+
+bigram_tf_idf <- bigrams_united %>%
+  dplyr::count(year, bigram) %>%
+  bind_tf_idf(bigram, year, n) %>%
+  arrange(desc(tf_idf))
+
+bigram_tf_idf
+
+# Visualizing bigrams
+
+bigram_counts <- bigram_counts %>% drop_na()
+
+bigram_graph <- bigram_counts %>%
+  filter(n > 50) %>%
+  graph_from_data_frame() 
+
+set.seed(1000)
+
+a <- grid::arrow(type = "closed", length = unit(.02, "inches"))
+
+ggraph(bigram_graph, layout = "fr") +
+  geom_edge_link(aes(edge_alpha = n), show.legend = TRUE,
+                 arrow = a, end_cap = circle(.09, 'inches')) +
+  geom_node_point(color = "lightblue", size = 5) +
+  geom_node_text(aes(label = name), vjust = 1, hjust = 1) +
+  theme_void()
+}
+
+````
+
+````{r}
+#Calling function to create bigrams for each year
+plot_bigram(2017)
+plot_bigram(2018)
+plot_bigram(2019)
+plot_bigram(2020)
+plot_bigram(2021)
+````
