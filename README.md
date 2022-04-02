@@ -7,4 +7,6 @@ These are my Academic and other Projects that I have worked on recently
  
  - Text and sentiment analysis
  - Clustering
+ - Time series analysis
+ 
 
